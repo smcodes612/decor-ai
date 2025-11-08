@@ -9,7 +9,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-client = genai.Client(api_key="")
+client = genai.Client(api_key="AIzaSyAIle7RYg0khaaN-Oo-890eJroGndF9I7M")
 
 @app.route("/decorate", methods=["POST"])
 def decorate():
