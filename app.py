@@ -4,11 +4,15 @@ import io
 import base64
 import openai  # replace later with Gemini client
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="FrontEnd")
 
 # Configure your API key
-openai.api_key = "YOUR_OPENAI_API_KEY"
+openai.api_key = "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"
 
+@app.route("/")
+def home():
+    return render_template("index.html")
+    
 @app.route("/decorate", methods=["POST"])
 def decorate():
     try:
