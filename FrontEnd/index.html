@@ -1,21 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
-<meta charset="UTF-8">
-<title>Decor AI</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="stylesheet" href="decorAI.css">
-<style>
-</style>
-<script src=""></script>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Decor AI</title>
+  <link rel="stylesheet" href="decorAI.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
 <body>
+  <div class="sideBar">
+    <button onclick="newChat()">+ New Chat</button>
+    
+    <h3>Recent</h3>
+    <div class="chatItem" onclick="loadChat(1)">Living room makeover ideas</div>
+    <div class="chatItem" onclick="loadChat(2)">Bedroom color schemes</div>
+    <div class="chatItem" onclick="loadChat(3)">Kitchen renovation tips</div>
+    <div class="chatItem" onclick="loadChat(4)">Minimalist decor suggestions</div>
+    <div class="chatItem" onclick="loadChat(5)">Scandinavian style guide</div>
+  </div>
 
-<img src="img_la.jpg" alt="LA" style="width:100%">
+  <div class="mainContent">
+    <div class="header">
+      <h1>DecorAI</h1>
+      <p>AI-powered interior design assistant</p>
+    </div>
 
-<div class="">
- <h1>Decor AI</h1>
- <p>hi</p>
- <p>hey</p>
-</div>
+    <div class="chatArea" id="chatArea">
+      <div class="message aiMessage">
+        <div class="avatar">AI</div>
+        <div class="messageContent">
+          Hello! I'm DecorAI, your interior design assistant. How can I help you transform your space today?
+        </div>
+      </div>
+    </div>
 
+    <div class="inputArea">
+      <input 
+        type="text" 
+        id="userInput" 
+        placeholder="Ask me anything about interior design..."
+        onkeypress="handleKeyPress(event)"
+      />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script src="decorAI.js"></script>
 </body>
 </html>
