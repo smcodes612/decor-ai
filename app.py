@@ -14,6 +14,7 @@ client = genai.Client(api_key="AIzaSyC9wUigN3kDXY2mmUXKipp0nusA9H2vM04")
 @app.route("/decorate", methods=["POST"])
 def decorate():
     try:
+        # Get form data
         room_size = request.form.get("room_size", "medium")
         occasion = request.form.get("occasion", "party")
         style = request.form.get("style", "modern")
@@ -21,10 +22,18 @@ def decorate():
         budget = request.form.get("budget", "1000")
         image_file = request.files["image"]
 
-        img = Image.open(image_file.stream)
+        # Open uploaded image and convert to PNG
+        img = Image.open(image_file.stream).convert("RGBA")
+        img_byte_arr = io.BytesIO()
+        img.save(img_byte_arr, format="PNG")
+        img_bytes = img_byte_arr.getvalue()
+
+        # Encode image bytes to Base64 for Gemini
+        img_base64 = base64.b64encode(img_bytes).decode("utf-8")
 
         materials_str = ", ".join(materials) if materials else "no specific materials"
 
+        # Text prompt for image generation
         image_prompt = f"""
         Transform this interior photo for a {occasion} in a {style} style.
         Room size: {room_size}.
@@ -35,17 +44,7 @@ def decorate():
         Ultra-detailed, photorealistic 8K render.
         """
 
-        img_byte_arr = io.BytesIO()
-        img.save(img_byte_arr, format=img.format or 'PNG')
-        img_byte_arr = img_byte_arr.getvalue()
-
-        image_part = types.Part(
-            inline_data=types.Blob(
-                mime_type="image/png",
-                data=img_byte_arr
-            )
-        )
-
+        # Text prompt for decoration plan
         text_prompt = f"""
         You are an expert interior decorator.
         Create a **brief, easy-to-follow decoration plan** for a {occasion} in a {style} style room.
@@ -57,7 +56,7 @@ def decorate():
         Do not use markdown. Only plain text.
         """
 
-
+main
         text_response = client.models.generate_content(
             model="gemini-2.5-flash",
             contents=text_prompt,
@@ -68,6 +67,14 @@ def decorate():
             if getattr(part, "text", None):
                 text_plan += part.text + "\n"
 
+        # Generate decorated image
+        image_part = types.Part(
+            inline_data=types.Blob(
+                mime_type="image/png",
+                data=img_base64
+            )
+        )
+
         image_response = client.models.generate_content(
             model="gemini-2.5-flash-image",
             contents=[image_prompt, image_part],
@@ -76,8 +83,7 @@ def decorate():
         generated_image_base64 = None
         for part in image_response.candidates[0].content.parts:
             if getattr(part, "inline_data", None):
-                image_bytes = part.inline_data.data
-                generated_image_base64 = base64.b64encode(image_bytes).decode("utf-8")
+                generated_image_base64 = base64.b64encode(part.inline_data.data).decode("utf-8")
 
         if not generated_image_base64:
             raise ValueError("No image returned from Gemini image model.")
