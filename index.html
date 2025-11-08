@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Room Decorator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #fafafa;
+      padding: 30px;
+      max-width: 700px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    form {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 12px;
+    }
+    input, select {
+      margin-top: 4px;
+      padding: 8px;
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button {
+      margin-top: 16px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      background-color: #007bff;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #output {
+      text-align: center;
+    }
+    #result {
+      max-width: 100%;
+      margin-top: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.15);
+    }
+    #plan {
+      margin-top: 25px;
+      white-space: pre-wrap;
+      text-align: left;
+      font-family: 'Courier New', monospace;
+      background: #f0f0f0;
+      padding: 15px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>AI Room Decorator</h1>
+
+  <form id="decorateForm">
+    <label>Upload Room Image:</label>
+    <input type="file" id="image" name="image" accept="image/*" required />
+
+    <label>Room Size:</label>
+    <select name="room_size" id="room_size">
+      <option value="small">Small</option>
+      <option value="medium" selected>Medium</option>
+      <option value="large">Large</option>
+    </select>
+
+    <label>Occasion:</label>
+    <input type="text" id="occasion" name="occasion" placeholder="e.g., Birthday, Wedding, Party" />
+
+    <label>Style:</label>
+    <input type="text" id="style" name="style" placeholder="e.g., Modern, Bohemian, Minimalist" />
+
+    <label>Materials (comma separated):</label>
+    <input type="text" id="materials" name="materials" placeholder="e.g., balloons, string lights" />
+
+    <label>Budget (USD):</label>
+    <input type="number" id="budget" name="budget" placeholder="e.g., 500" />
+
+    <button type="submit">Generate Decoration</button>
+  </form>
+
+  <div id="output">
+    <h2>Generated Image</h2>
+    <img id="result" src="" alt="AI Decorated Room" />
+    <h2>Decoration Plan</h2>
+    <pre id="plan"></pre>
+  </div>
+
+  <script>
+    document.getElementById("decorateForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData();
+      const imageFile = document.getElementById("image").files[0];
+      if (!imageFile) return alert("Please upload an image first.");
+
+      const materials = document.getElementById("materials").value
+        .split(",")
+        .map((m) => m.trim())
+        .filter((m) => m);
+
+      formData.append("image", imageFile);
+      formData.append("room_size", document.getElementById("room_size").value);
+      formData.append("occasion", document.getElementById("occasion").value);
+      formData.append("style", document.getElementById("style").value);
+      formData.append("budget", document.getElementById("budget").value);
+      materials.forEach((m) => formData.append("materials[]", m));
+
+      document.getElementById("plan").textContent = "Generating... please wait.";
+      document.getElementById("result").src = "";
+
+      try {
+        const res = await fetch("http://127.0.0.1:5000/decorate", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await res.json();
+
+        if (data.status === "success") {
+          document.getElementById("result").src = `data:image/png;base64,${data.image_base64}`;
+          document.getElementById("plan").textContent = data.text_plan || "No plan generated.";
+        } else {
+          document.getElementById("plan").textContent = "❌ " + data.message;
+        }
+      } catch (err) {
+        document.getElementById("plan").textContent = "❌ Error: " + err.message;
+      }
+    });
+  </script>
+</body>
+</html>
