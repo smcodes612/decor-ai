@@ -7,7 +7,7 @@ from google.genai import types
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": ["http://127.0.0.1:5500", "http://localhost:5500"]}})
 
 client = genai.Client(api_key="AIzaSyAIle7RYg0khaaN-Oo-890eJroGndF9I7M")
 
