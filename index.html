@@ -547,8 +547,9 @@
   </div>
 
   <script>
+    // Variables
     let currentImage = null;
-    const API_URL = "http://127.0.0.1:5000/decorate";
+    const API_URL = "http://127.0.0.1:5000/decorate"; // adjust to your backend
 
     // Dark mode toggle
     const darkToggle = document.getElementById('darkToggle');
@@ -561,56 +562,40 @@
     function showPage(pageName) {
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       document.getElementById(pageName).classList.add('active');
-      
-      if (pageName === 'gallery') {
-        loadGallery();
-      }
+      if (pageName === 'gallery') loadGallery();
     }
 
     document.querySelectorAll('[data-page]').forEach(link => {
-      link.addEventListener('click', (e) => {
+      link.addEventListener('click', e => {
         e.preventDefault();
         showPage(e.target.dataset.page);
       });
     });
 
-    // Upload handling
+    // Image upload handling
     const uploadArea = document.getElementById('uploadArea');
     const imageInput = document.getElementById('imageInput');
     const previewArea = document.getElementById('previewArea');
     const previewImage = document.getElementById('previewImage');
 
     uploadArea.addEventListener('click', () => imageInput.click());
-
-    uploadArea.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      uploadArea.classList.add('dragover');
-    });
-
-    uploadArea.addEventListener('dragleave', () => {
-      uploadArea.classList.remove('dragover');
-    });
-
-    uploadArea.addEventListener('drop', (e) => {
+    uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+    uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+    uploadArea.addEventListener('drop', e => {
       e.preventDefault();
       uploadArea.classList.remove('dragover');
       const file = e.dataTransfer.files[0];
-      if (file && file.type.startsWith('image/')) {
-        handleImageUpload(file);
-      }
+      if (file && file.type.startsWith('image/')) handleImageUpload(file);
     });
-
-    imageInput.addEventListener('change', (e) => {
+    imageInput.addEventListener('change', e => {
       const file = e.target.files[0];
-      if (file) {
-        handleImageUpload(file);
-      }
+      if (file) handleImageUpload(file);
     });
 
     function handleImageUpload(file) {
       currentImage = file;
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = e => {
         previewImage.src = e.target.result;
         previewArea.style.display = 'block';
       };
@@ -632,7 +617,6 @@
 
       generateBtn.disabled = true;
       generateBtn.textContent = 'Generating...';
-      
       resultsSection.style.display = 'block';
       beforeImage.innerHTML = '<div class="spinner"></div>';
       afterImage.innerHTML = '<div class="spinner"></div>';
@@ -640,9 +624,7 @@
 
       // Show before image
       const reader = new FileReader();
-      reader.onload = (e) => {
-        beforeImage.innerHTML = `<img src="${e.target.result}" />`;
-      };
+      reader.onload = e => beforeImage.innerHTML = `<img src="${e.target.result}" />`;
       reader.readAsDataURL(currentImage);
 
       const formData = new FormData();
@@ -651,16 +633,12 @@
       formData.append('occasion', document.getElementById('occasion').value);
       formData.append('style', document.getElementById('style').value);
       formData.append('budget', document.getElementById('budget').value);
-      
+
       const materials = document.getElementById('materials').value.split(',').map(m => m.trim()).filter(m => m);
       materials.forEach(m => formData.append('materials[]', m));
 
       try {
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          body: formData
-        });
-
+        const response = await fetch(API_URL, { method: 'POST', body: formData });
         const data = await response.json();
 
         if (data.status === 'success') {
@@ -668,14 +646,9 @@
           afterImage.innerHTML = `<img src="${imgSrc}" />`;
           decorationPlan.textContent = data.text_plan || 'No plan generated.';
 
-          // Save to gallery (using in-memory storage instead of localStorage)
+          // Save only the plan text to localStorage (avoid images)
           const saved = JSON.parse(localStorage.getItem('partydecor_gallery') || '[]');
-          saved.push({
-            before: previewImage.src,
-            after: imgSrc,
-            plan: data.text_plan,
-            timestamp: new Date().toISOString()
-          });
+          saved.push({ plan: data.text_plan, timestamp: new Date().toISOString() });
           localStorage.setItem('partydecor_gallery', JSON.stringify(saved));
         } else {
           afterImage.innerHTML = '<p style="color: red;">❌ Generation failed</p>';
@@ -690,7 +663,7 @@
       }
     });
 
-    // Gallery
+    // Gallery loader
     function loadGallery() {
       const galleryGrid = document.getElementById('galleryGrid');
       const saved = JSON.parse(localStorage.getItem('partydecor_gallery') || '[]');
@@ -702,7 +675,10 @@
 
       galleryGrid.innerHTML = saved.map((item, index) => `
         <div class="gallery-item" onclick='viewGalleryItem(${index})'>
-          <img src="${item.after}" alt="Design ${index + 1}" />
+          <div style="padding: 1rem; background: #f9f9f9; border-radius: 10px;">
+            <h4>Design ${index + 1}</h4>
+            <p>${item.plan.substring(0, 100)}${item.plan.length > 100 ? '...' : ''}</p>
+          </div>
         </div>
       `).join('');
     }
@@ -710,11 +686,11 @@
     function viewGalleryItem(index) {
       const saved = JSON.parse(localStorage.getItem('partydecor_gallery') || '[]');
       const item = saved[index];
-      
+
       showPage('decorator');
       document.getElementById('resultsSection').style.display = 'block';
-      document.getElementById('beforeImage').innerHTML = `<img src="${item.before}" />`;
-      document.getElementById('afterImage').innerHTML = `<img src="${item.after}" />`;
+      document.getElementById('beforeImage').innerHTML = '<p>Original image not saved</p>';
+      document.getElementById('afterImage').innerHTML = '<p>Generated image not saved</p>';
       document.getElementById('decorationPlan').textContent = item.plan;
     }
   </script>
